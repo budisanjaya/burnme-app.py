@@ -247,6 +247,45 @@ def load_cache(lat, lon, max_age_minutes=60):
     except Exception:
         return None
 
+def get_fallback_data():
+    """Fallback data sample untuk demo saat API rate limit"""
+    current_hour = datetime.now().strftime("%Y-%m-%dT%H:00")
+    return {
+        "latitude": -8.625,
+        "longitude": 115.25,
+        "generationtime_ms": 0.5,
+        "utc_offset_seconds": 28800,
+        "timezone": "Asia/Singapore",
+        "timezone_abbreviation": "SGT",
+        "elevation": 75.0,
+        "current_weather": {
+            "temperature": 28.5,
+            "windspeed": 12.0,
+            "winddirection": 135,
+            "weathercode": 0,
+            "is_day": 1,
+            "time": current_hour
+        },
+        "hourly_units": {
+            "time": "iso8601",
+            "temperature_2m": "°C",
+            "relative_humidity_2m": "%",
+            "windspeed_10m": "km/h",
+            "winddirection_10m": "°",
+            "windgusts_10m": "km/h",
+            "boundary_layer_height": "m"
+        },
+        "hourly": {
+            "time": [f"{datetime.now().strftime('%Y-%m-%d')}T{h:02d}:00" for h in range(24)],
+            "temperature_2m": [25.2, 24.8, 24.5, 24.2, 24.0, 23.8, 24.5, 25.8, 27.2, 28.5, 29.8, 30.5, 31.2, 31.5, 31.2, 30.8, 30.2, 29.5, 28.8, 28.5, 27.8, 27.2, 26.5, 25.8],
+            "relative_humidity_2m": [75, 77, 78, 80, 81, 82, 80, 75, 70, 65, 60, 58, 55, 54, 55, 58, 60, 63, 66, 68, 70, 72, 74, 75],
+            "windspeed_10m": [8.5, 8.2, 8.0, 7.8, 7.5, 7.2, 8.0, 9.5, 10.8, 12.0, 13.5, 14.2, 15.0, 15.5, 15.2, 14.8, 14.0, 13.2, 12.5, 12.0, 11.2, 10.5, 9.8, 9.0],
+            "winddirection_10m": [120, 118, 115, 112, 110, 108, 110, 115, 120, 125, 130, 132, 135, 138, 140, 138, 135, 132, 130, 135, 140, 142, 145, 143],
+            "windgusts_10m": [12.5, 12.0, 11.8, 11.5, 11.2, 11.0, 12.0, 14.0, 16.0, 18.0, 20.0, 21.0, 22.0, 23.0, 22.5, 22.0, 21.0, 19.5, 18.5, 18.0, 17.0, 16.0, 15.0, 14.0],
+            "boundary_layer_height": [350, 320, 300, 280, 260, 250, 350, 550, 850, 1200, 1500, 1650, 1800, 1850, 1800, 1700, 1550, 1350, 1100, 900, 700, 550, 450, 400]
+        }
+    }
+
 @st.cache_data(ttl=300)
 def fetch_open_meteo(params: dict):
     """Fetch data dari OpenMeteo API dengan caching"""
@@ -282,7 +321,7 @@ with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
         st.success("✅ Data cuaca berhasil diambil dari API")
         
     except requests.HTTPError as e:
-        # Jika rate limit (429), gunakan cache
+        # Jika rate limit (429), gunakan cache atau fallback
         if hasattr(e, "response") and e.response is not None and e.response.status_code == 429:
             if cached:
                 st.warning("⚠️ Batas permintaan API tercapai. Menggunakan data cache terakhir.")
@@ -291,14 +330,12 @@ with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
                 data = cached["data"]
                 data_source = "cached"
             else:
-                st.error("❌ Batas permintaan API tercapai dan tidak ada data cache tersedia.")
-                st.info("💡 **Solusi:** Tunggu beberapa saat atau coba lagi besok. OpenMeteo gratis memiliki limit harian.")
-                if hasattr(e, "response"):
-                    try:
-                        st.json(e.response.json())
-                    except Exception:
-                        pass
-                st.stop()
+                st.warning("⚠️ Batas permintaan API tercapai. Menggunakan data sample untuk demo.")
+                st.info("💡 **Info:** Ini adalah data sample untuk area Bali. OpenMeteo API gratis memiliki limit harian. Silakan coba lagi besok untuk data real-time.")
+                data = get_fallback_data()
+                data_source = "sample"
+                # Simpan fallback ke cache untuk dipakai berikutnya
+                save_cache(lat, lon, data)
         else:
             st.error(f"Gagal mengambil data cuaca (HTTPError): {e}")
             if hasattr(e, "response") and e.response is not None:
@@ -375,6 +412,8 @@ if data_source == "fresh":
     st.markdown("### 🌦️ Info Cuaca Lengkap 🟢 _Live Data_")
 elif data_source == "cached":
     st.markdown("### 🌦️ Info Cuaca Lengkap 🟡 _Data Cache_")
+elif data_source == "sample":
+    st.markdown("### 🌦️ Info Cuaca Lengkap 🟠 _Data Sample (Demo)_")
 else:
     st.markdown("### 🌦️ Info Cuaca Lengkap")
 
