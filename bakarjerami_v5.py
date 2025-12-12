@@ -3,11 +3,9 @@ from streamlit_folium import st_folium
 import folium
 import requests
 from math import radians, sin, cos, sqrt, atan2
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import Image
 import base64
-import json
-import os
 
 # ===============================
 # PAGE CONFIG (WAJIB PALING ATAS)
@@ -206,33 +204,36 @@ lat, lon = st.session_state["location"]
 # ===============================
 # OPEN-METEO FETCH (CACHE + BUTTON)
 # ===============================
-CACHE_FILE = "weather_cache.json"
+
+# Initialize session state untuk cache
+if "weather_cache" not in st.session_state:
+    st.session_state["weather_cache"] = {}
 
 def save_cache(lat, lon, data):
-    """Simpan data cuaca ke file lokal dengan timestamp"""
+    """Simpan data cuaca ke session state dengan timestamp"""
     try:
-        cache_data = {
-            "timestamp": datetime.now().isoformat(),
+        cache_key = f"{lat:.2f}_{lon:.2f}"  # Round koordinat untuk caching
+        st.session_state["weather_cache"][cache_key] = {
+            "timestamp": datetime.now(),
             "latitude": lat,
             "longitude": lon,
             "data": data
         }
-        with open(CACHE_FILE, "w") as f:
-            json.dump(cache_data, f)
     except Exception as e:
         st.warning(f"Gagal menyimpan cache: {e}")
 
 def load_cache(lat, lon, max_age_minutes=60):
-    """Load data dari cache jika masih valid (dalam rentang koordinat dan waktu)"""
+    """Load data dari session state cache jika masih valid"""
     try:
-        if not os.path.exists(CACHE_FILE):
+        cache_key = f"{lat:.2f}_{lon:.2f}"
+        
+        if cache_key not in st.session_state["weather_cache"]:
             return None
         
-        with open(CACHE_FILE, "r") as f:
-            cache_data = json.load(f)
+        cache_data = st.session_state["weather_cache"][cache_key]
         
         # Cek apakah cache masih fresh (< max_age_minutes)
-        cache_time = datetime.fromisoformat(cache_data["timestamp"])
+        cache_time = cache_data["timestamp"]
         age_minutes = (datetime.now() - cache_time).total_seconds() / 60
         
         # Cek apakah koordinat sama (dengan toleransi 0.01 derajat ~ 1km)
@@ -285,7 +286,7 @@ with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
         if hasattr(e, "response") and e.response is not None and e.response.status_code == 429:
             if cached:
                 st.warning("⚠️ Batas permintaan API tercapai. Menggunakan data cache terakhir.")
-                cache_age = (datetime.now() - datetime.fromisoformat(cached["timestamp"])).total_seconds() / 60
+                cache_age = (datetime.now() - cached["timestamp"]).total_seconds() / 60
                 st.info(f"📦 Data cache dari {int(cache_age)} menit yang lalu (koordinat: {cached['latitude']:.4f}, {cached['longitude']:.4f})")
                 data = cached["data"]
                 data_source = "cached"
@@ -312,7 +313,7 @@ with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
         # Untuk error lain, coba gunakan cache jika ada
         if cached:
             st.warning(f"⚠️ Gagal mengambil data baru: {e}")
-            cache_age = (datetime.now() - datetime.fromisoformat(cached["timestamp"])).total_seconds() / 60
+            cache_age = (datetime.now() - cached["timestamp"]).total_seconds() / 60
             st.info(f"📦 Menggunakan data cache dari {int(cache_age)} menit yang lalu")
             data = cached["data"]
             data_source = "cached"
