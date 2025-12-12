@@ -7,49 +7,28 @@ from datetime import datetime
 from PIL import Image
 import base64
 
-
-# gambarIkon = Image.open('iconbakarjerami.png')
-# st.set_page_config(
-#     page_title="Cek Aman Pembakaran Jerami",
-#     layout="centered"
-# )
-
-
-gambarIkon = Image.open("iconbakarjerami.png")
-
-
-col1, col2 = st.columns([0.2, 0.8])  
-
-with col1:
-    st.image(gambarIkon, width=150)
-
-with col2:
-    st.markdown(
-        """
-        <h1 style='text-align:left; margin-top: 15px;'>
-            PERIKSA KEAMANAN PEMBAKARAN JERAMI
-        </h1>
-        """,
-        unsafe_allow_html=True
-    )
-
+# ===============================
+# PAGE CONFIG (WAJIB PALING ATAS)
+# ===============================
+st.set_page_config(
+    page_title="Cek Aman Pembakaran Jerami",
+    layout="centered",
+)
 
 # ===============================
-#     FUNGSI BACKGROUND IMAGE
+# BACKGROUND IMAGE HELPER
 # ===============================
-def get_base64_image(image_path):
-    """Mengkonversi gambar ke base64 untuk digunakan di CSS"""
+def get_base64_image(image_path: str):
     try:
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
-    except:
+    except Exception:
         return None
 
-# Encode background image
 bg_image = get_base64_image("background_sawah.png")
 
 # ===============================
-#           CUSTOM CSS
+# CUSTOM CSS
 # ===============================
 if bg_image:
     st.markdown(
@@ -72,22 +51,6 @@ if bg_image:
             background-color: rgba(255, 255, 255, 0.75);
             z-index: -1;
         }}
-        .main {{
-            padding: 2rem;
-            border-radius: 10px;
-        }}
-        .stButton button {{
-            width: 100%;
-            border-radius: 5px;
-            background-color: #ff4b4b;
-        }}
-        h1 {{
-            color: #ff4b4b;
-            text-align: center;
-            padding: 1rem;
-            border-bottom: 2px solid #ff4b4b;
-            margin-bottom: 2rem;
-        }}
         .weather-info {{
             background-color: rgba(255, 255, 255, 0.98);
             padding: 1.5rem;
@@ -97,22 +60,6 @@ if bg_image:
             backdrop-filter: blur(10px);
             border: 1px solid rgba(200, 200, 200, 0.3);
         }}
-        /* Membuat teks lebih gelap dan jelas */
-        .weather-info p, .weather-info div {{
-            color: #1a1a1a !important;
-            font-weight: 500;
-        }}
-        /* Styling untuk error/warning messages */
-        .stAlert {{
-            background-color: rgba(255, 255, 255, 0.98) !important;
-            border: 2px solid !important;
-        }}
-        /* Membuat teks di error box lebih jelas */
-        .stAlert p, .stAlert div, .stAlert li {{
-            color: #1a1a1a !important;
-            font-weight: 600 !important;
-        }}
-        /* Styling khusus untuk list alasan */
         .stMarkdown ul li {{
             color: #000000 !important;
             font-weight: 500 !important;
@@ -127,86 +74,76 @@ if bg_image:
         unsafe_allow_html=True,
     )
 else:
-    # Fallback CSS jika gambar tidak ditemukan
     st.markdown(
         """
         <style>
-        .main {{
-            padding: 2rem;
-            border-radius: 10px;
-        }}
-        .stButton button {{
-            width: 100%;
-            border-radius: 5px;
-            background-color: #ff4b4b;
-        }}
-        h1 {{
-            color: #ff4b4b;
-            text-align: center;
-            padding: 1rem;
-            border-bottom: 2px solid #ff4b4b;
-            margin-bottom: 2rem;
-        }}
-        .weather-info {{
+        .weather-info {
             background-color: white;
             padding: 1.5rem;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin: 1rem 0;
-        }}
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
+# ===============================
+# HEADER (ICON + TITLE)
+# ===============================
+col1, col2 = st.columns([0.22, 0.78])
 
+with col1:
+    try:
+        gambarIkon = Image.open("iconbakarjerami.png")
+        st.image(gambarIkon, width=120)
+    except Exception:
+        st.write("")
 
-# Lokasi default: Bali
-default_location = [-8.65, 115.2167]
+with col2:
+    st.markdown(
+        """
+        <h1 style='text-align:left; margin-top: 12px; color:#ff4b4b;'>
+            PERIKSA KEAMANAN PEMBAKARAN JERAMI
+        </h1>
+        """,
+        unsafe_allow_html=True
+    )
+
+# ===============================
+# DEFAULT LOCATION
+# ===============================
+default_location = [-8.65, 115.2167]  # Bali
 
 if "location" not in st.session_state:
     st.session_state["location"] = default_location
 if "zoom_level" not in st.session_state:
     st.session_state["zoom_level"] = 10
 
+# Bandara I Gusti Ngurah Rai
+bandara_lat = -8.7482
+bandara_lon = 115.1670
 
 # ===============================
-#       FUNGSI BANTUAN
+# FUNGSI BANTUAN
 # ===============================
-
 def arah_angin(degrees):
-    """Mengubah derajat arah angin menjadi teks (Utara, Timur, dst)."""
-    arah = [
-        "Utara",
-        "Timur Laut",
-        "Timur",
-        "Tenggara",
-        "Selatan",
-        "Barat Daya",
-        "Barat",
-        "Barat Laut",
-    ]
+    arah = ["Utara", "Timur Laut", "Timur", "Tenggara", "Selatan", "Barat Daya", "Barat", "Barat Laut"]
     if degrees is None:
         return "Tidak tersedia"
     index = int((degrees + 22.5) // 45) % 8
     return arah[index]
 
-
 def hitung_jarak(lat1, lon1, lat2, lon2):
-    """Haversine distance - jarak km antara dua koordinat."""
-    R = 6371  # km
+    R = 6371
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
-    a = (
-        sin(dlat / 2) ** 2
-        + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
-    )
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    a = sin(dlat/2)**2 + cos(radians(lat1))*cos(radians(lat2))*sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
     return R * c
 
-
 def aman_di_rentang(nilai, low, high, include_low=True, include_high=True):
-    """Helper untuk cek apakah nilai masih di dalam rentang."""
     if nilai is None:
         return False
     if include_low and include_high:
@@ -217,9 +154,7 @@ def aman_di_rentang(nilai, low, high, include_low=True, include_high=True):
         return low < nilai <= high
     return low < nilai < high
 
-
 def ambil_index_saat_ini(current, hourly):
-    """Cari index waktu current_weather di deret waktu hourly."""
     hourly_times = hourly.get("time", [])
     current_time_str = current.get("time")
     if not current_time_str or not hourly_times:
@@ -229,26 +164,17 @@ def ambil_index_saat_ini(current, hourly):
     except ValueError:
         return None
 
-
 def ambil_dari_list(lst, idx, default=None):
-    """Aman ambil data dari list berdasarkan index."""
-    if lst is None:
+    if lst is None or idx is None:
         return default
     try:
         return lst[idx]
     except (TypeError, IndexError):
         return default
 
-
-# Koordinat Bandara I Gusti Ngurah Rai
-bandara_lat = -8.7482
-bandara_lon = 115.1670
-
-
 # ===============================
-#            MAP VIEW
+# MAP VIEW
 # ===============================
-
 m = folium.Map(
     location=st.session_state["location"],
     zoom_start=st.session_state["zoom_level"],
@@ -263,7 +189,6 @@ folium.Marker(
 st.markdown("🗺️ **Klik pada peta untuk memilih lokasi**")
 map_data = st_folium(m, height=500, width="100%")
 
-# Update zoom & lokasi berdasarkan interaksi peta
 if map_data:
     if "zoom" in map_data:
         st.session_state["zoom_level"] = map_data["zoom"]
@@ -276,38 +201,52 @@ if map_data:
 
 lat, lon = st.session_state["location"]
 
-
 # ===============================
-#      REQUEST CUACA API
+# OPEN-METEO FETCH (CACHE + BUTTON)
 # ===============================
+@st.cache_data(ttl=300)
+def fetch_open_meteo(params: dict):
+    r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=15)
+    r.raise_for_status()
+    return r.json()
 
-url = (
-    "https://api.open-meteo.com/v1/forecast?"
-    f"latitude={lat}&longitude={lon}"
-    "&hourly=temperature_2m,relative_humidity_2m,windspeed_10m,"
-    "winddirection_10m,windgusts_10m,boundary_layer_height"
-    "&current_weather=true"
-)
+params = {
+    "latitude": lat,
+    "longitude": lon,
+    "hourly": "temperature_2m,relative_humidity_2m,windspeed_10m,winddirection_10m,windgusts_10m,boundary_layer_height",
+    "current_weather": "true",
+    "timezone": "auto",
+}
 
-try:
-    response = requests.get(url, timeout=10)
-except requests.RequestException:
-    st.error("Tidak dapat menghubungi server cuaca.")
+st.markdown("---")
+if not st.button("🌦️ Ambil Data Cuaca"):
+    st.info("Klik tombol **Ambil Data Cuaca** untuk memuat data cuaca & hasil analisis.")
     st.stop()
 
-if response.status_code != 200:
-    st.error("Gagal mengambil data cuaca dari server.")
-    st.stop()
-
-data = response.json()
+with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
+    try:
+        data = fetch_open_meteo(params)
+    except requests.HTTPError as e:
+        st.error(f"Gagal mengambil data cuaca (HTTPError): {e}")
+        if hasattr(e, "response") and e.response is not None:
+            st.write("Status:", e.response.status_code)
+            try:
+                st.write(e.response.json())
+            except Exception:
+                st.write(e.response.text[:500])
+        st.stop()
+    except Exception as e:
+        st.error(f"Gagal mengambil data cuaca: {e}")
+        st.stop()
 
 current = data.get("current_weather", {})
 hourly = data.get("hourly", {})
 
-# Cari index data current di deret hourly
+# ===============================
+# AMBIL DATA CUACA
+# ===============================
 idx_now = ambil_index_saat_ini(current, hourly)
 
-# Ambil data dasar
 temp = current.get("temperature")
 wind = current.get("windspeed")
 wind_dir = current.get("winddirection")
@@ -316,208 +255,137 @@ humidity_list = hourly.get("relative_humidity_2m", [])
 pbl_list = hourly.get("boundary_layer_height", [])
 wd_hourly = hourly.get("winddirection_10m", [])
 
-if idx_now is not None:
-    humidity = ambil_dari_list(humidity_list, idx_now)
-    pbl = ambil_dari_list(pbl_list, idx_now)
-    # 12 jam sebelum: mundur 12 jam dari index saat ini
-    idx_12h = idx_now - 12
-    wind_dir_12h = ambil_dari_list(wd_hourly, idx_12h) if idx_12h >= 0 else None
-else:
-    # fallback: ambil index pertama / ke-12 seperti sebelumnya
-    humidity = ambil_dari_list(humidity_list, 0)
-    pbl = ambil_dari_list(pbl_list, 0)
-    wind_dir_12h = ambil_dari_list(wd_hourly, 12)
+humidity = ambil_dari_list(humidity_list, idx_now)
+pbl = ambil_dari_list(pbl_list, idx_now)
+
+idx_12h = (idx_now - 12) if (idx_now is not None) else None
+wind_dir_12h = ambil_dari_list(wd_hourly, idx_12h) if (idx_12h is not None and idx_12h >= 0) else None
 
 arah_wd = arah_angin(wind_dir)
 
-# Ventilation Index = PBL * WindSpeed
-if pbl is not None and wind is not None:
-    vi = pbl * wind
-else:
-    vi = None
+# Ventilation Rate = PBL * WindSpeed (hindari cek "wind and pbl")
+vr = (pbl * wind) if (pbl is not None and wind is not None) else None
 
-# Hitung jarak ke bandara
 jarak_bandara = hitung_jarak(lat, lon, bandara_lat, bandara_lon)
 
-now = datetime.now()
-jam_desimal = now.hour + now.minute / 60.0
+# Jam lokal dari API (timezone=auto)
+jam_desimal = None
+try:
+    t = current.get("time")
+    if t:
+        dt = datetime.fromisoformat(t)  # "YYYY-MM-DDTHH:MM"
+        jam_desimal = dt.hour + dt.minute / 60.0
+        now_str = dt.strftime("%H:%M")
+    else:
+        now_str = datetime.now().strftime("%H:%M")
+except Exception:
+    now_str = datetime.now().strftime("%H:%M")
 
-# Hitung perubahan arah angin
-perubahan_wd = None
-if wind_dir is not None and wind_dir_12h is not None:
-    perubahan_wd = abs(wind_dir - wind_dir_12h)
-
+perubahan_wd = abs(wind_dir - wind_dir_12h) if (wind_dir is not None and wind_dir_12h is not None) else None
 
 # ===============================
-#       TAMPILKAN INFO CUACA
+# TAMPILKAN INFO CUACA
 # ===============================
-
 st.markdown("<div class='weather-info'>", unsafe_allow_html=True)
 st.markdown("### 🌦️ Info Cuaca Lengkap")
 
-col1, col2 = st.columns(2)
+colA, colB = st.columns(2)
 
-with col1:
+with colA:
     st.write(f"**Suhu (T):** {temp}°C" if temp is not None else "**Suhu (T):** Tidak tersedia")
-    st.write(
-        f"**Kelembaban (RH):** {humidity}%"
-        if humidity is not None
-        else "**Kelembaban (RH):** Tidak tersedia"
-    )
-    st.write(
-        f"**Kecepatan Angin (WS):** {wind} kph"
-        if wind is not None
-        else "**Kecepatan Angin (WS):** Tidak tersedia"
-    )
-    st.write(
-        f"**Boundary Layer Height (PBL):** {pbl} m"
-        if pbl is not None
-        else "**Boundary Layer Height (PBL):** Tidak tersedia"
-    )
-    if vi is not None:
-        st.write(f"**Ventilation Index (VI):** {vi:.2f} m²/s")
-    else:
-        st.write("**Ventilation Index (VI):** Tidak tersedia")
+    st.write(f"**Kelembaban (RH):** {humidity}%" if humidity is not None else "**Kelembaban (RH):** Tidak tersedia")
+    st.write(f"**Kecepatan Angin (WS):** {wind} kph" if wind is not None else "**Kecepatan Angin (WS):** Tidak tersedia")
+    st.write(f"**Boundary Layer Height (PBL):** {pbl} m" if pbl is not None else "**Boundary Layer Height (PBL):** Tidak tersedia")
+    st.write(f"**Ventilation Rate (VR):** {vr:.2f} m²/s" if vr is not None else "**Ventilation Rate (VR):** Tidak tersedia")
 
-with col2:
-    st.write(
-        f"**Arah Angin (WD):** {wind_dir}° ({arah_wd})"
-        if wind_dir is not None
-        else "**Arah Angin (WD):** Tidak tersedia"
-    )
-    if wind_dir_12h is not None:
-        st.write(f"**WD 12 jam lalu:** {wind_dir_12h}°")
-    else:
-        st.write("**WD 12 jam lalu:** Tidak tersedia")
-
-    if perubahan_wd is not None:
-        st.write(f"**Perubahan WD:** {perubahan_wd:.1f}°")
-    else:
-        st.write("**Perubahan WD:** Tidak dapat dihitung")
-
+with colB:
+    st.write(f"**Arah Angin (WD):** {wind_dir}° ({arah_wd})" if wind_dir is not None else "**Arah Angin (WD):** Tidak tersedia")
+    st.write(f"**WD 12 jam lalu:** {wind_dir_12h}°" if wind_dir_12h is not None else "**WD 12 jam lalu:** Tidak tersedia")
+    st.write(f"**Perubahan WD:** {perubahan_wd:.1f}°" if perubahan_wd is not None else "**Perubahan WD:** Tidak dapat dihitung")
     st.write(f"**Jarak ke bandara:** {jarak_bandara:.2f} km")
-    st.write(f"**Waktu Sekarang:** {now.strftime('%H:%M')}")
+    st.write(f"**Waktu Lokal:** {now_str}")
 
 st.write(f"**Lokasi Terpilih:** {lat:.5f}, {lon:.5f}")
 st.markdown("</div>", unsafe_allow_html=True)
 
-
-
-
 # ===============================
-#      LOGIKA KELAYAKAN
+# LOGIKA KELAYAKAN (TANPA SKOR)
 # ===============================
-
 alasan = []
 aman = True
 
-# 1. Kelembaban: 10–80% (inklusif)
+# 1. RH 10–80%
 if not aman_di_rentang(humidity, 10, 80, include_low=True, include_high=True):
     aman = False
-    alasan.append(
-        f"Kelembaban {humidity}% di luar rentang aman 10–80%."
-        if humidity is not None
-        else "Data kelembaban tidak tersedia."
-    )
+    alasan.append(f"Kelembaban {humidity}% di luar rentang aman 10–80%." if humidity is not None else "Data kelembaban tidak tersedia.")
 
-# 2. Kecepatan angin: 6–40 kph (inklusif)
+# 2. WS 6–40 kph
 if not aman_di_rentang(wind, 6, 40, include_low=True, include_high=True):
     aman = False
-    alasan.append(
-        f"Kecepatan angin {wind} kph di luar rentang aman 6–40 kph."
-        if wind is not None
-        else "Data kecepatan angin tidak tersedia."
-    )
-    
+    alasan.append(f"Kecepatan angin {wind} kph di luar rentang aman 6–40 kph." if wind is not None else "Data kecepatan angin tidak tersedia.")
 
-
-# 3. Perubahan arah angin > 30°
+# 3. ΔWD > 30°
 if perubahan_wd is not None and perubahan_wd > 30:
     aman = False
-    alasan.append(
-        f"Arah angin berubah signifikan (ΔWD {perubahan_wd:.1f}° > 30°) dalam 12 jam terakhir."
-    )
+    alasan.append(f"Arah angin berubah signifikan (ΔWD {perubahan_wd:.1f}° > 30°) dalam 12 jam terakhir.")
 elif perubahan_wd is None:
-    # Tidak langsung menjadikan tidak aman, tapi informasikan
     alasan.append("Perubahan arah angin 12 jam terakhir tidak dapat dihitung.")
 
-# 4. Suhu: -1 sampai 43°C (inklusif)
+# 4. Suhu -1 – 43°C
 if not aman_di_rentang(temp, -1, 43, include_low=True, include_high=True):
     aman = False
-    alasan.append(
-        f"Suhu {temp}°C di luar rentang aman -1 sampai 43°C."
-        if temp is not None
-        else "Data suhu tidak tersedia."
-    )
+    alasan.append(f"Suhu {temp}°C di luar rentang aman -1 sampai 43°C." if temp is not None else "Data suhu tidak tersedia.")
 
-# 5. Jarak ke bandara > 2 km
+# 5. Jarak bandara > 2 km
 if jarak_bandara < 2:
     aman = False
-    alasan.append(
-        f"Jarak ke bandara hanya {jarak_bandara:.2f} km (harus > 2 km)."
-    )
+    alasan.append(f"Jarak ke bandara hanya {jarak_bandara:.2f} km (harus > 2 km).")
 
-# 6. Ventilation Index 3580–44720 m²/s
-if vi is None or not aman_di_rentang(vi, 3580, 44720, include_low=True, include_high=True):
+# 6. VR 3580–44720
+if vr is None or not aman_di_rentang(vr, 3580, 44720, include_low=True, include_high=True):
     aman = False
-    if vi is not None:
-        alasan.append(
-            f"Ventilation Index {vi:.2f} m²/s di luar rentang aman 3580–44720 m²/s."
-        )
-    else:
-        alasan.append("Ventilation Index tidak tersedia.")
+    alasan.append(f"Ventilation Rate {vr:.2f} m²/s di luar rentang aman 3580–44720 m²/s." if vr is not None else "Ventilation Rate tidak tersedia.")
 
-# 7. Waktu pembakaran: 09.30 – 18.00 (inklusif)
-if not aman_di_rentang(jam_desimal, 9.5, 18, include_low=True, include_high=True):
+# 7. Waktu 09.30 – 18.00
+if jam_desimal is None or not aman_di_rentang(jam_desimal, 9.5, 18, include_low=True, include_high=True):
     aman = False
-    alasan.append(
-        f"Waktu sekarang {now.strftime('%H:%M')} di luar rentang aman 09.30 – 18.00."
-    )
-
+    alasan.append(f"Waktu sekarang {now_str} di luar rentang aman 09.30 – 18.00.")
 
 # ===============================
-#            STATUS
+# STATUS + REKOMENDASI
 # ===============================
-
+st.markdown("---")
 if aman:
     st.success("### ✅ CUACA AMAN UNTUK PEMBAKARAN")
-    if wind >= 3 and wind <=25 :
+
+    if wind is not None and 3 <= wind <= 25:
         st.markdown("<div class='weather-info'>", unsafe_allow_html=True)
         st.markdown("### TEKNIK PEMBAKARAN")
-        st.markdown("""
-                Teknik pembakaran yang direkomendasikan adalah Headfire
-                (Api bergerak searah angin)
-                 
-                    """)
+        st.markdown("Teknik pembakaran yang direkomendasikan adalah **Headfire** (api bergerak searah angin).")
         st.markdown("</div>", unsafe_allow_html=True)
-       
 
-        
-    elif wind >= 27 and wind <=40:
+    elif wind is not None and 27 <= wind <= 40:
         st.markdown("<div class='weather-info'>", unsafe_allow_html=True)
-        st.markdown("### REKOMENDASI PEMBUATAN FIREBREAK")
-        st.markdown("""
-                Teknik pembakaran yang direkomendasikan adalah Flankfire (Api bergerak tegak lurus arah angin
-                atau Backfire (Api bergerak melawan arah angin)
-                    """)
+        st.markdown("### TEKNIK PEMBAKARAN")
+        st.markdown("Rekomendasi: **Flankfire** (tegak lurus angin) atau **Backfire** (melawan arah angin).")
         st.markdown("</div>", unsafe_allow_html=True)
-        
-
 
     st.markdown("<div class='weather-info'>", unsafe_allow_html=True)
     st.markdown("### REKOMENDASI PEMBUATAN FIREBREAK")
-    st.markdown("""
-    Pembuatan Firebreak harus dilakukan sebelum pembakaran jerami
+    st.markdown(
+        """
+        Pembuatan **Firebreak** harus dilakukan sebelum pembakaran jerami.
 
-    Firebreak dapat berupa :
-    1. Garis kendali/Garis bajak yang dibuat dengan mencangkul atau bajak.
-    2. Natural breaks seperti sungai, selokan, jalan tanpa rumput.
-    3. Jalur bakar atau jalur basah. Jalur bakar dilakukan dengan teknik backfire atau flankfire, 
-    jalur basah dilakukan dengan membasahi batas batas plot pembakaran            
-                """)
+        Firebreak dapat berupa:
+        1. Garis kendali / garis bajak (mencangkul atau membajak).
+        2. Natural breaks: sungai, selokan, jalan tanpa rumput.
+        3. Jalur bakar / jalur basah:
+           - Jalur bakar: teknik backfire atau flankfire.
+           - Jalur basah: membasahi batas plot pembakaran.
+        """
+    )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    
 else:
     st.error("### ⚠️ PEMBAKARAN TIDAK AMAN")
     st.write("**Alasan:**")
