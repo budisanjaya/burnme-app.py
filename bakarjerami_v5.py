@@ -6,6 +6,8 @@ from math import radians, sin, cos, sqrt, atan2
 from datetime import datetime
 from PIL import Image
 import base64
+import json
+import os
 
 # ===============================
 # PAGE CONFIG (WAJIB PALING ATAS)
@@ -204,8 +206,49 @@ lat, lon = st.session_state["location"]
 # ===============================
 # OPEN-METEO FETCH (CACHE + BUTTON)
 # ===============================
+CACHE_FILE = "weather_cache.json"
+
+def save_cache(lat, lon, data):
+    """Simpan data cuaca ke file lokal dengan timestamp"""
+    try:
+        cache_data = {
+            "timestamp": datetime.now().isoformat(),
+            "latitude": lat,
+            "longitude": lon,
+            "data": data
+        }
+        with open(CACHE_FILE, "w") as f:
+            json.dump(cache_data, f)
+    except Exception as e:
+        st.warning(f"Gagal menyimpan cache: {e}")
+
+def load_cache(lat, lon, max_age_minutes=60):
+    """Load data dari cache jika masih valid (dalam rentang koordinat dan waktu)"""
+    try:
+        if not os.path.exists(CACHE_FILE):
+            return None
+        
+        with open(CACHE_FILE, "r") as f:
+            cache_data = json.load(f)
+        
+        # Cek apakah cache masih fresh (< max_age_minutes)
+        cache_time = datetime.fromisoformat(cache_data["timestamp"])
+        age_minutes = (datetime.now() - cache_time).total_seconds() / 60
+        
+        # Cek apakah koordinat sama (dengan toleransi 0.01 derajat ~ 1km)
+        lat_diff = abs(cache_data["latitude"] - lat)
+        lon_diff = abs(cache_data["longitude"] - lon)
+        
+        if age_minutes <= max_age_minutes and lat_diff < 0.01 and lon_diff < 0.01:
+            return cache_data
+        
+        return None
+    except Exception:
+        return None
+
 @st.cache_data(ttl=300)
 def fetch_open_meteo(params: dict):
+    """Fetch data dari OpenMeteo API dengan caching"""
     r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=15)
     r.raise_for_status()
     return r.json()
@@ -223,21 +266,59 @@ if not st.button("🌦️ Ambil Data Cuaca"):
     st.info("Klik tombol **Ambil Data Cuaca** untuk memuat data cuaca & hasil analisis.")
     st.stop()
 
+# Coba load dari cache terlebih dahulu
+cached = load_cache(lat, lon, max_age_minutes=60)
+data = None
+data_source = None
+
 with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
     try:
+        # Coba ambil data fresh dari API
         data = fetch_open_meteo(params)
+        data_source = "fresh"
+        # Simpan ke cache lokal
+        save_cache(lat, lon, data)
+        st.success("✅ Data cuaca berhasil diambil dari API")
+        
     except requests.HTTPError as e:
-        st.error(f"Gagal mengambil data cuaca (HTTPError): {e}")
-        if hasattr(e, "response") and e.response is not None:
-            st.write("Status:", e.response.status_code)
-            try:
-                st.write(e.response.json())
-            except Exception:
-                st.write(e.response.text[:500])
-        st.stop()
+        # Jika rate limit (429), gunakan cache
+        if hasattr(e, "response") and e.response is not None and e.response.status_code == 429:
+            if cached:
+                st.warning("⚠️ Batas permintaan API tercapai. Menggunakan data cache terakhir.")
+                cache_age = (datetime.now() - datetime.fromisoformat(cached["timestamp"])).total_seconds() / 60
+                st.info(f"📦 Data cache dari {int(cache_age)} menit yang lalu (koordinat: {cached['latitude']:.4f}, {cached['longitude']:.4f})")
+                data = cached["data"]
+                data_source = "cached"
+            else:
+                st.error("❌ Batas permintaan API tercapai dan tidak ada data cache tersedia.")
+                st.info("💡 **Solusi:** Tunggu beberapa saat atau coba lagi besok. OpenMeteo gratis memiliki limit harian.")
+                if hasattr(e, "response"):
+                    try:
+                        st.json(e.response.json())
+                    except Exception:
+                        pass
+                st.stop()
+        else:
+            st.error(f"Gagal mengambil data cuaca (HTTPError): {e}")
+            if hasattr(e, "response") and e.response is not None:
+                st.write("Status:", e.response.status_code)
+                try:
+                    st.write(e.response.json())
+                except Exception:
+                    st.write(e.response.text[:500])
+            st.stop()
+            
     except Exception as e:
-        st.error(f"Gagal mengambil data cuaca: {e}")
-        st.stop()
+        # Untuk error lain, coba gunakan cache jika ada
+        if cached:
+            st.warning(f"⚠️ Gagal mengambil data baru: {e}")
+            cache_age = (datetime.now() - datetime.fromisoformat(cached["timestamp"])).total_seconds() / 60
+            st.info(f"📦 Menggunakan data cache dari {int(cache_age)} menit yang lalu")
+            data = cached["data"]
+            data_source = "cached"
+        else:
+            st.error(f"Gagal mengambil data cuaca: {e}")
+            st.stop()
 
 current = data.get("current_weather", {})
 hourly = data.get("hourly", {})
@@ -287,7 +368,14 @@ perubahan_wd = abs(wind_dir - wind_dir_12h) if (wind_dir is not None and wind_di
 # TAMPILKAN INFO CUACA
 # ===============================
 st.markdown("<div class='weather-info'>", unsafe_allow_html=True)
-st.markdown("### 🌦️ Info Cuaca Lengkap")
+
+# Tampilkan badge sumber data
+if data_source == "fresh":
+    st.markdown("### 🌦️ Info Cuaca Lengkap 🟢 _Live Data_")
+elif data_source == "cached":
+    st.markdown("### 🌦️ Info Cuaca Lengkap 🟡 _Data Cache_")
+else:
+    st.markdown("### 🌦️ Info Cuaca Lengkap")
 
 colA, colB = st.columns(2)
 
