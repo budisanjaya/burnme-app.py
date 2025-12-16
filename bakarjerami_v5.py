@@ -411,7 +411,7 @@ hourly = data.get("hourly", {})
 # ===============================
 # MODE DEBUG
 # ===============================
-show_debug = st.checkbox("🔍 Tampilkan Data Debug (untuk troubleshooting)")
+show_debug = st.checkbox("🔍 Tampilkan Data Debug")
 st.session_state['show_debug_info'] = show_debug
 
 if show_debug:
