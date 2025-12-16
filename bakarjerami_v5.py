@@ -54,7 +54,7 @@ if bg_image:
         .weather-info {{
             background-color: rgba(255, 255, 255, 0.95);
             padding: 1rem 1.25rem;
-            border-radius: 8px;
+            border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             margin: 0.75rem 0;
             backdrop-filter: blur(10px);
