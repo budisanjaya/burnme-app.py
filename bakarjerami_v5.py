@@ -52,22 +52,22 @@ if bg_image:
             z-index: -1;
         }}
         .weather-info {{
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 1rem 1.25rem;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            margin: 0.75rem 0;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(200, 200, 200, 0.2);
+            background-color: rgba(255, 255, 255, 0.92);
+            padding: 0.85rem 1rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            margin: 0.6rem 0;
+            backdrop-filter: blur(10px);
+            border: none;
         }}
         .stMarkdown ul li {{
             color: #000000 !important;
             font-weight: 500 !important;
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 6px 10px;
-            margin: 4px 0;
-            border-radius: 4px;
-            border-left: 2px solid #ff4b4b;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 8px;
+            margin: 3px 0;
+            border-radius: 3px;
+            border-left: 1.5px solid #ff4b4b
         }}
         </style>
         """,
