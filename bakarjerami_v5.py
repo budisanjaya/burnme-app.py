@@ -8,7 +8,7 @@ from PIL import Image
 import base64
 
 # ===============================
-# PAGE CONFIG 
+# PAGE CONFIG
 # ===============================
 st.set_page_config(
     page_title="Cek Aman Pembakaran Jerami",
@@ -48,26 +48,26 @@ if bg_image:
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.75);
+            background-color: rgba(255, 255, 255, 0.85);
             z-index: -1;
         }}
         .weather-info {{
-            background-color: rgba(255, 255, 255, 0.98);
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-            margin: 1rem 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin: 0.75rem 0;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(200, 200, 200, 0.3);
+            border: 1px solid rgba(200, 200, 200, 0.2);
         }}
         .stMarkdown ul li {{
             color: #000000 !important;
             font-weight: 500 !important;
             background-color: rgba(255, 255, 255, 0.95);
-            padding: 8px 12px;
-            margin: 5px 0;
-            border-radius: 5px;
-            border-left: 4px solid #ff4b4b;
+            padding: 6px 10px;
+            margin: 4px 0;
+            border-radius: 4px;
+            border-left: 2px solid #ff4b4b;
         }}
         </style>
         """,
@@ -155,7 +155,10 @@ def aman_di_rentang(nilai, low, high, include_low=True, include_high=True):
     return low < nilai < high
 
 def ambil_index_saat_ini(current, hourly):
-   
+    """
+    Mencari index waktu saat ini dalam data hourly.
+    Menangani berbagai format waktu dan mencari jam terdekat sebagai fallback.
+    """
     hourly_times = hourly.get("time", [])
     current_time_str = current.get("time")
     
@@ -391,7 +394,7 @@ with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
             st.stop()
             
     except Exception as e:
-        # Untuk error lain, coba gunakan cache jika ada
+        # Untuk error lain, gunakan cache aja...
         if cached:
             st.warning(f"⚠️ Gagal mengambil data baru: {e}")
             cache_age = (datetime.now() - cached["timestamp"]).total_seconds() / 60
@@ -501,9 +504,9 @@ st.markdown("<div class='weather-info'>", unsafe_allow_html=True)
 
 # Tampilkan badge sumber data
 if data_source == "fresh":
-    st.markdown("### 🌦️ Info Cuaca Lengkap (🟢 Live Data)")
+    st.markdown("### 🌦️ Info Cuaca Lengkap 🟢 _Live Data_")
 elif data_source == "cached":
-    st.markdown("### 🌦️ Info Cuaca Lengkap (🟡 Data Cache)")
+    st.markdown("### 🌦️ Info Cuaca Lengkap 🟡 _Data Cache_")
 elif data_source == "sample":
     st.markdown("### 🌦️ Info Cuaca Lengkap 🟠 _Data Sample (Demo)_")
 else:
