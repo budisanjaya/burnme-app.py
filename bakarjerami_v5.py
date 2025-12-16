@@ -501,9 +501,9 @@ st.markdown("<div class='weather-info'>", unsafe_allow_html=True)
 
 # Tampilkan badge sumber data
 if data_source == "fresh":
-    st.markdown("### 🌦️ Info Cuaca Lengkap 🟢 _Live Data_")
+    st.markdown("### 🌦️ Info Cuaca Lengkap (🟢 Live Data)")
 elif data_source == "cached":
-    st.markdown("### 🌦️ Info Cuaca Lengkap 🟡 _Data Cache_")
+    st.markdown("### 🌦️ Info Cuaca Lengkap (🟡 Data Cache)")
 elif data_source == "sample":
     st.markdown("### 🌦️ Info Cuaca Lengkap 🟠 _Data Sample (Demo)_")
 else:
