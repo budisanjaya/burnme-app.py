@@ -57,7 +57,7 @@ if bg_image:
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             margin: 0.75rem 0;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(4px);
             border: 1px solid rgba(200, 200, 200, 0.2);
         }}
         .stMarkdown ul li {{
