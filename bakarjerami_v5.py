@@ -160,9 +160,18 @@ def ambil_index_saat_ini(current, hourly):
     if not current_time_str or not hourly_times:
         return None
     try:
+        # Coba cari kecocokan persis dulu
         return hourly_times.index(current_time_str)
     except ValueError:
-        return None
+        # Jika tidak cocok, bulatkan ke jam terdekat (hapus menit)
+        try:
+            dt = datetime.fromisoformat(current_time_str)
+            # Bulatkan ke jam (set menit dan detik ke 0)
+            rounded_time = dt.replace(minute=0, second=0, microsecond=0)
+            rounded_time_str = rounded_time.strftime("%Y-%m-%dT%H:%M")
+            return hourly_times.index(rounded_time_str)
+        except (ValueError, AttributeError):
+            return None
 
 def ambil_dari_list(lst, idx, default=None):
     if lst is None or idx is None:
