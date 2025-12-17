@@ -155,10 +155,7 @@ def aman_di_rentang(nilai, low, high, include_low=True, include_high=True):
     return low < nilai < high
 
 def ambil_index_saat_ini(current, hourly):
-    """
-    Mencari index waktu saat ini dalam data hourly.
-    Menangani berbagai format waktu dan mencari jam terdekat sebagai fallback.
-    """
+   
     hourly_times = hourly.get("time", [])
     current_time_str = current.get("time")
     
@@ -270,7 +267,7 @@ def save_cache(lat, lon, data):
         st.warning(f"Gagal menyimpan cache: {e}")
 
 def load_cache(lat, lon, max_age_minutes=60):
-    """Load data dari session state cache jika masih valid"""
+    
     try:
         cache_key = f"{lat:.2f}_{lon:.2f}"
         
@@ -295,7 +292,7 @@ def load_cache(lat, lon, max_age_minutes=60):
         return None
 
 def get_fallback_data():
-    """Fallback data sample untuk demo saat API rate limit"""
+    """Fallback data sample saat API rate limit"""
     current_hour = datetime.now().strftime("%Y-%m-%dT%H:00")
     return {
         "latitude": -8.625,
@@ -335,7 +332,7 @@ def get_fallback_data():
 
 @st.cache_data(ttl=300)
 def fetch_open_meteo(params: dict):
-    """Fetch data dari OpenMeteo API dengan caching"""
+    
     r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=15)
     r.raise_for_status()
     return r.json()
@@ -368,7 +365,7 @@ with st.spinner("Mengambil data cuaca dari Open-Meteo..."):
         st.success("✅ Data cuaca berhasil diambil dari API")
         
     except requests.HTTPError as e:
-        # Jika rate limit (429), gunakan cache atau fallback
+        # limit (429), gunakan cache atau fallback
         if hasattr(e, "response") and e.response is not None and e.response.status_code == 429:
             if cached:
                 st.warning("⚠️ Batas permintaan API tercapai. Menggunakan data cache terakhir.")
