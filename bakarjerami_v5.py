@@ -635,7 +635,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        © 2025 <b>Teknik Pertanian</b> | Aplikasi Keamanan Pembakaran Jerami
+        © 2025 <b>This website is an institutional initiative developed and managed by the Study Program of Agricultural and Biosystem Engineering, Faculty of Agricultural Technology, Udayana University</b> 
     </div>
     """,
     unsafe_allow_html=True
