@@ -623,7 +623,7 @@ st.markdown(
         position: fixed;
         bottom: 0;
         width: 100%;
-        text-align: center;
+        text-align: left;
         padding: 10px;
         font-size: 13px;
         color: #222;
