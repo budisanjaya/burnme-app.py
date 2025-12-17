@@ -614,3 +614,30 @@ else:
     st.write("**Alasan:**")
     for a in alasan:
         st.write(f"- {a}")
+
+
+st.markdown(
+    """
+    <style>
+    .footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        font-size: 13px;
+        color: #222;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(6px);
+        border-top: 1px solid rgba(0,0,0,0.1);
+        z-index: 9999;
+    }
+    </style>
+
+    <div class="footer">
+        © 2025 <b>Teknik Pertanian</b> | Aplikasi Keamanan Pembakaran Jerami
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
